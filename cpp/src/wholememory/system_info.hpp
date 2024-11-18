@@ -19,6 +19,7 @@
 
 #if CUDA_VERSION >= 12030
 #include <nvml.h>
+#include "nvml_wrap.h"
 #endif
 bool DevAttrPagebleMemoryAccess();
 
@@ -37,6 +38,8 @@ bool SupportEGM();
 // bool SupportMNNVLForEGM();
 #if CUDA_VERSION >= 12030
 namespace wholememory {
+
+inline bool nvmlFabricSymbolLoaded = NvmlFabricSymbolLoaded();
 wholememory_error_code_t GetGpuFabricInfo(int dev, nvmlGpuFabricInfo_t* gpuFabricInfo);
 }
 
