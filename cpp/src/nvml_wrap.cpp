@@ -39,7 +39,7 @@ template <typename T>
 T LoadNvmlSymbol(const char* name) {
   void* symbol = dlsym(nvml_handle, name);
   if (!symbol) {
-    fprintf(stderr, "Failed to load NVML symbol %s: %s\n", name, dlerror());
+    return nullptr;
   }
   return reinterpret_cast<T>(symbol);
 }
