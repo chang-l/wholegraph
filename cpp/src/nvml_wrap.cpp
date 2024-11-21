@@ -12,10 +12,12 @@
 // See the License for the specific language governing permissions and
 // limitations under the License.
 
-#include <dlfcn.h>
-#include <stdio.h>
-#include <mutex>
 #include "nvml_wrap.h"
+
+#if CUDA_VERSION >= 12030
+#include <dlfcn.h>
+#include <mutex>
+#include <stdio.h>
 
 namespace {
 
@@ -23,7 +25,8 @@ void* nvml_handle = nullptr;
 std::mutex nvml_mutex;
 bool nvml_loaded = false;
 
-bool LoadNvmlLibrary() {
+bool LoadNvmlLibrary()
+{
   nvml_handle = dlopen("libnvidia-ml.so.1", RTLD_NOW);
   if (!nvml_handle) {
     nvml_handle = dlopen("libnvidia-ml.so", RTLD_NOW);
@@ -36,11 +39,10 @@ bool LoadNvmlLibrary() {
 }
 
 template <typename T>
-T LoadNvmlSymbol(const char* name) {
+T LoadNvmlSymbol(const char* name)
+{
   void* symbol = dlsym(nvml_handle, name);
-  if (!symbol) {
-    return nullptr;
-  }
+  if (!symbol) { return nullptr; }
   return reinterpret_cast<T>(symbol);
 }
 
@@ -51,10 +53,11 @@ nvmlDeviceGetHandleByIndexFunc nvmlDeviceGetHandleByIndexPtr = nullptr;
 nvmlDeviceGetGpuFabricInfoFunc nvmlDeviceGetGpuFabricInfoPtr = nullptr;
 
 // Ensure NVML is loaded and symbols are initialized
-bool NvmlFabricSymbolLoaded() {
+bool NvmlFabricSymbolLoaded()
+{
   std::lock_guard<std::mutex> lock(nvml_mutex);
   if (nvml_loaded) {
-    return true; // Already loaded
+    return true;  // Already loaded
   }
 
   if (LoadNvmlLibrary()) {
@@ -72,3 +75,4 @@ bool NvmlFabricSymbolLoaded() {
   }
   return nvml_loaded;
 }
+#endif

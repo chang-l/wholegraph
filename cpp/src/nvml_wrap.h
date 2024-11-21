@@ -13,9 +13,10 @@
 // limitations under the License.
 
 #pragma once
+#include <cuda.h>
 
+#if CUDA_VERSION >= 12030
 #include <nvml.h>
-
 
 bool NvmlFabricSymbolLoaded();
 
@@ -24,3 +25,4 @@ typedef nvmlReturn_t (*nvmlDeviceGetGpuFabricInfoFunc)(nvmlDevice_t, nvmlGpuFabr
 
 extern nvmlDeviceGetHandleByIndexFunc nvmlDeviceGetHandleByIndexPtr;
 extern nvmlDeviceGetGpuFabricInfoFunc nvmlDeviceGetGpuFabricInfoPtr;
+#endif

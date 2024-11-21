@@ -535,7 +535,7 @@ void exchange_rank_info(wholememory_comm_t wm_comm)
   wm_comm->clique_info.is_in_clique = 0;
 
 #if CUDA_VERSION >= 12030
-  if(nvmlFabricSymbolLoaded) {
+  if (nvmlFabricSymbolLoaded) {
     memset(&ri.fabric_info, 0, sizeof(ri.fabric_info));
     WHOLEMEMORY_CHECK_NOTHROW(GetGpuFabricInfo(wm_comm->dev_id, &ri.fabric_info) ==
                               WHOLEMEMORY_SUCCESS);
@@ -548,7 +548,9 @@ void exchange_rank_info(wholememory_comm_t wm_comm)
       wm_comm->clique_info.is_in_clique = 1;
     }
   } else {
-    WHOLEMEMORY_WARN("Some required NVML symbols are missing, likely due to an outdated GPU display driver. MNNVL support will be disabled.");
+    WHOLEMEMORY_WARN(
+      "Some required NVML symbols are missing, likely due to an outdated GPU display driver. MNNVL "
+      "support will be disabled.");
   }
 
 #endif
@@ -578,30 +580,32 @@ void exchange_rank_info(wholememory_comm_t wm_comm)
     }
 
 #if CUDA_VERSION >= 12030
-  if(nvmlFabricSymbolLoaded) {
-    if ((memcmp(ri.fabric_info.clusterUuid,
-                p_rank_info.get()[r].fabric_info.clusterUuid,
-                NVML_GPU_FABRIC_UUID_LEN) == 0) &&
-        (ri.fabric_info.cliqueId == p_rank_info.get()[r].fabric_info.cliqueId)) {
-      if (r == wm_comm->world_rank) {
-        wm_comm->clique_info.clique_rank = wm_comm->clique_info.clique_rank_num;
+    if (nvmlFabricSymbolLoaded) {
+      if ((memcmp(ri.fabric_info.clusterUuid,
+                  p_rank_info.get()[r].fabric_info.clusterUuid,
+                  NVML_GPU_FABRIC_UUID_LEN) == 0) &&
+          (ri.fabric_info.cliqueId == p_rank_info.get()[r].fabric_info.cliqueId)) {
+        if (r == wm_comm->world_rank) {
+          wm_comm->clique_info.clique_rank = wm_comm->clique_info.clique_rank_num;
+        }
+        if (wm_comm->clique_info.clique_rank_num == 0) {
+          wm_comm->clique_info.clique_first_rank = r;
+        }
+        wm_comm->clique_info.clique_rank_num++;
       }
-      if (wm_comm->clique_info.clique_rank_num == 0) { wm_comm->clique_info.clique_first_rank = r; }
-      wm_comm->clique_info.clique_rank_num++;
+      clique_uuids.insert(
+        std::string(reinterpret_cast<const char*>(p_rank_info.get()[r].fabric_info.clusterUuid),
+                    NVML_GPU_FABRIC_UUID_LEN));
     }
-    clique_uuids.insert(
-      std::string(reinterpret_cast<const char*>(p_rank_info.get()[r].fabric_info.clusterUuid),
-                  NVML_GPU_FABRIC_UUID_LEN));
-  }
 #endif
   }
 
 #if CUDA_VERSION >= 12030
-  if(nvmlFabricSymbolLoaded) {
+  if (nvmlFabricSymbolLoaded) {
     wm_comm->clique_info.clique_num = clique_uuids.size();
 
     std::string uuid = std::string(reinterpret_cast<const char*>(ri.fabric_info.clusterUuid),
-                                  NVML_GPU_FABRIC_UUID_LEN);
+                                   NVML_GPU_FABRIC_UUID_LEN);
     int id           = 0;
     for (auto clique_uuid : clique_uuids) {
       if (clique_uuid == uuid) { wm_comm->clique_info.clique_id = id; }
